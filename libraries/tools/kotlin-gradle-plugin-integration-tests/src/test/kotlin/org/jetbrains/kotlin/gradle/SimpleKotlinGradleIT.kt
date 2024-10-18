@@ -1,11 +1,11 @@
 package org.jetbrains.kotlin.gradle
 
 import org.gradle.api.logging.LogLevel
-import org.gradle.api.logging.configuration.WarningMode
 import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilerExecutionStrategy
 import org.jetbrains.kotlin.gradle.testbase.*
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
+import org.jetbrains.kotlin.gradle.plugin.diagnostics.KotlinToolingDiagnostics
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
@@ -336,6 +336,33 @@ class SimpleKotlinGradleIT : KGPBaseTest() {
             KotlinSourceSet::customSourceFilesExtensions // ensure the accessed property is available on KotlinSourceSet
             buildAndFail("help") {
                 assertOutputContains("Could not get unknown property 'customSourceFilesExtensions' for source set 'main' ")
+            }
+        }
+    }
+
+    @GradleTest
+    fun testKotlinCompilerEmbeddable(gradleVersion: GradleVersion) {
+        project("kotlinProjectWithBuildSrc", gradleVersion) {
+            build {
+                assertNoDiagnostic(KotlinToolingDiagnostics.KotlinCompilerEmbeddableIsPresentInClasspath)
+            }
+            subProject("buildSrc").buildGradle.append(
+                """
+                dependencies {
+                    runtimeOnly("org.jetbrains.kotlin:kotlin-compiler-embeddable:${'$'}{org.gradle.kotlin.dsl.KotlinDependencyExtensionsKt.embeddedKotlinVersion}")
+                }
+                """.trimIndent()
+            )
+            if (gradleVersion == GradleVersion.version(TestVersions.Gradle.G_7_6)) {
+                buildAndFail {
+                    // example of incompatibility caused by the problem
+                    assertOutputContains("class org.jetbrains.kotlin.build.report.metrics.GradleBuildTime can not implement org.jetbrains.kotlin.build.report.metrics.BuildTime, because it is not an interface")
+                    assertHasDiagnostic(KotlinToolingDiagnostics.KotlinCompilerEmbeddableIsPresentInClasspath)
+                }
+            } else {
+                build {
+                    assertHasDiagnostic(KotlinToolingDiagnostics.KotlinCompilerEmbeddableIsPresentInClasspath)
+                }
             }
         }
     }
