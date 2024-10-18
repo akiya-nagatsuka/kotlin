@@ -6,14 +6,10 @@
 package org.jetbrains.kotlin.ir.backend.js
 
 import org.jetbrains.kotlin.backend.common.Mapping
-import org.jetbrains.kotlin.ir.backend.js.utils.MutableReference
 import org.jetbrains.kotlin.ir.declarations.*
 
 class JsMapping : Mapping() {
     val classToItsDefaultConstructor: DeclarationMapping<IrClass, IrConstructor> by AttributeBasedMappingDelegate()
-
-    val esClassWhichNeedBoxParameters: DeclarationMapping<IrClass, Boolean> by AttributeBasedMappingDelegate()
-    val esClassToPossibilityForOptimization: DeclarationMapping<IrClass, MutableReference<Boolean>> by AttributeBasedMappingDelegate()
 
     // Main function wrappers
     val mainFunctionToItsWrapper: DeclarationMapping<IrSimpleFunction, IrSimpleFunction> by AttributeBasedMappingDelegate()
