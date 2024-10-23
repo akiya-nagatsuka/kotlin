@@ -73,8 +73,7 @@ class KotlinTestsRegistry(val project: Project, val allTestsTaskName: String = "
     private fun doGetOrCreateAggregatedTestTask(
         name: String,
         description: String,
-        parent: TaskProvider<KotlinTestReport>? = null,
-        configure: (TaskProvider<KotlinTestReport>) -> Unit = {}
+        parent: TaskProvider<KotlinTestReport>? = null
     ): TaskProvider<KotlinTestReport> {
         val existed = project.locateTask<KotlinTestReport>(name)
         if (existed != null) return existed
@@ -105,8 +104,6 @@ class KotlinTestsRegistry(val project: Project, val allTestsTaskName: String = "
             it.addChild(aggregate)
             it.dependsOn(aggregate)
         }
-
-        configure(aggregate)
 
         return aggregate
     }
